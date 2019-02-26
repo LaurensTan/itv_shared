@@ -7,11 +7,12 @@ import seaborn as sns
 import math
 
 
-def calc_distance(deg1, deg2):
-    '''Returns the distance in km of two points in NYC based on angular separation'''
+def calc_distance(df):
+    '''Returns a Series of distance in km of two points in NYC based on angular separation'''
     radius = 6369.4
-    rad_diff = np.absolute(deg1 - deg2)*np.pi/180
-    return round(rad_diff*radius, 4)
+    long_diff = ((df['pickup_longitude'] - df['dropoff_longitude'])*(np.pi/180)*radius)
+    lat_diff = ((df['pickup_latitude'] - df['dropoff_latitude'])*(np.pi/180)*radius)
+    return np.sqrt(long_diff**2 + lat_diff**2).round(decimals=3)
     
 
 def read_data(filename, lines):
@@ -28,22 +29,18 @@ def clean_data(df):
     df[coords] = df[coords].astype('float32')
     df['pickup_datetime'] = pd.to_datetime(df['pickup_datetime'], format='%Y-%m-%d %H:%M:%S %Z')
 
-    dlong = (df['pickup_longitude'] - df['dropoff_longitude']) * 111
-    dlat = (df['pickup_latitude'] - df['dropoff_latitude']) * 85
-    distance = np.sqrt(dlong ** 2 + dlat ** 2)
-    #df['fare_amount'] = pd.qcut(df['fare_amount'], 3, labels = [0,1,2])
+    df['distance'] = calc_distance(df)
+    df = df[(df['distance'] > 0.2) & (df['distance'] < 60)]
 
     df['dayofweek'] = [x.weekday() for x in df['pickup_datetime']]
     df['hourofday'] = [x.hour for x in df['pickup_datetime']]
+    return df
 
 
-def plot_distance(df):
-    #df['distance'] = df.[['dropoff_longitude', 'pickup_longitude']].apply()
-    df['distance'] = df['dropoff_longitude']
-    
-    #.abs() + (df['dropoff_latitude'] - df['pickup_latitude']).abs()
-    print(df.head())
-    sns.lmplot(x='distance', y='fare_amount', data=df, fit_reg=False)
+def plot_distance(df, alpha=0.2, size=6):
+    print(df['fare_amount'].unique())
+    exit()
+    sns.lmplot(x='distance', y='fare_amount', data=df, fit_reg=False, scatter_kws={'alpha': alpha, 's': size})
     plt.show()
 
 
@@ -53,9 +50,11 @@ def mooieplot(df, alpha=0.01, size=6):
 
 
 def main():
-    df = read_data('train.csv', lines=1000)
-    clean_data(df)
-    mooieplot(df, alpha=0.2, size=6)
+    df = read_data('train.csv', lines=10000)
+    #df = read_data('train.csv', lines=1000000)
+    df = clean_data(df)
+    #mooieplot(df, alpha=0.02, size=6)
+    plot_distance(df)
 
 
 if __name__ == '__main__':
