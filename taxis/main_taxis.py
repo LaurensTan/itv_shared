@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import os, sys
 import pandas as pd
@@ -7,12 +8,13 @@ import math
 
 
 def loaddata():
-    df = pd.read_csv('train.csv', chunksize = 100000)
+    df = pd.read_csv('data\\train.csv', chunksize = 100000)
     for i in df:
         df = pd.DataFrame(i)
         break
+    return df
 
-def datamanipulatie():
+def datamanipulatie(df):
     df = df[(df['pickup_longitude'] < -73.5) & (df['pickup_longitude'] > -74.2)]
     df = df[(df['pickup_latitude'] < 40.9) & (df['pickup_latitude'] > 40.4)]
     #df['fare_amount'] = pd.qcut(df['fare_amount'], 3, labels = [0,1,2])
@@ -25,11 +27,15 @@ def datamanipulatie():
     df['dayofweek'] = [x.weekday() for x in df['pickup_datetime']]
     df['hourofday'] = [x.hour for x in df['pickup_datetime']]
 
-def mooieplot():
+def mooieplot(df):
     sns.lmplot(x = 'pickup_longitude', y = 'pickup_latitude',data = df, fit_reg = False, height = 20, scatter_kws = {'alpha' : 0.01, 's':6})
+    plt.show()
 
 def main():
     print('main')
+    df = loaddata()
+    datamanipulatie(df)
+    mooieplot(df)
     pass
 
 
